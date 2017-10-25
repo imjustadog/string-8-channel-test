@@ -1,0 +1,25 @@
+--cpu Cortex-M3
+"string-8-channel-test\stm32f1xx_hal_adc.o"
+"string-8-channel-test\stm32f1xx_hal_rcc_ex.o"
+"string-8-channel-test\stm32f1xx_hal_dma.o"
+"string-8-channel-test\stm32f1xx_hal_flash.o"
+"string-8-channel-test\stm32f1xx_hal_cortex.o"
+"string-8-channel-test\stm32f1xx_hal_adc_ex.o"
+"string-8-channel-test\stm32f1xx_hal.o"
+"string-8-channel-test\stm32f1xx_hal_pwr.o"
+"string-8-channel-test\stm32f1xx_hal_flash_ex.o"
+"string-8-channel-test\stm32f1xx_hal_tim.o"
+"string-8-channel-test\stm32f1xx_hal_gpio_ex.o"
+"string-8-channel-test\stm32f1xx_hal_uart.o"
+"string-8-channel-test\stm32f1xx_hal_gpio.o"
+"string-8-channel-test\stm32f1xx_hal_rcc.o"
+"string-8-channel-test\stm32f1xx_hal_tim_ex.o"
+"string-8-channel-test\main.o"
+"string-8-channel-test\stm32f1xx_it.o"
+"string-8-channel-test\stm32f1xx_hal_msp.o"
+"string-8-channel-test\system_stm32f1xx.o"
+"string-8-channel-test\startup_stm32f103xe.o"
+--library_type=microlib --strict --scatter "string-8-channel-test\string-8-channel-test.sct"
+--diag_suppress=L6329 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "string-8-channel-test.map" -o string-8-channel-test\string-8-channel-test.axf
