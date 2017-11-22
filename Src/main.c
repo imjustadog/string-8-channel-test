@@ -40,13 +40,14 @@
 #include "stm32f1xx_hal.h"
 
 /* USER CODE BEGIN Includes */
-
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
 TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim8;
 DMA_HandleTypeDef hdma_tim1_ch1;
 DMA_HandleTypeDef hdma_tim1_ch2;
@@ -62,7 +63,41 @@ UART_HandleTypeDef huart3;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 char test[10] = "test!\r\n";
-	
+uint16_t Capture[8][30];
+volatile uint8_t state = 0;
+volatile uint8_t timeout_flag = 0;
+volatile uint8_t send_flag = 0;
+volatile uint8_t capture_flag = 0;
+volatile float cycleaverage[8] = {0};
+volatile uint8_t capture_cplt = 0;
+volatile uint8_t capture_fini = 0;
+
+extern uint16_t cycle[30];
+
+uint32_t size = 25;
+float Frequency = 0;
+float Temperature = 0;
+
+TIM_HandleTypeDef *htim[8];
+DMA_HandleTypeDef *hdma[8];
+
+float	A = 0.0014051f;
+float B = 0.0002369f;
+float C = 0.0000001019f;
+
+uint8_t data_buf[34] = {
+	'S',
+	0,0,0,0,
+	0,0,0,0, 
+	0,0,0,0, 
+	0,0,0,0, 
+	0,0,0,0, 
+	0,0,0,0, 
+  'E'};
+
+uint8_t data_test[46];
+
+
 GPIO_TypeDef* STRING_GPIO[8] = {
 	GPIOA, 
 	GPIOA, 
@@ -83,25 +118,16 @@ uint16_t STRING_PIN[8] = {
 	GPIO_PIN_8,
 	GPIO_PIN_9};
 
-DMA_Channel_TypeDef* STRING_DMA_CHANNEL[8] = {
-	DMA1_Channel2, 
-	DMA1_Channel3, 
-	DMA1_Channel6, 
-	DMA1_Channel4, 
-	DMA2_Channel3, 
-	DMA2_Channel5,
-	DMA2_Channel1,
-	DMA2_Channel2};
-
-TIM_TypeDef* STRING_TIM[8] = {
-	TIM1, 
-  TIM1, 
-	TIM1, 
-	TIM1, 
-	TIM8, 
-  TIM8,
-  TIM8,
-  TIM8};
+uint32_t TIM_CHANNEL[8] = {
+	TIM_CHANNEL_1,
+	TIM_CHANNEL_2,
+	TIM_CHANNEL_3,
+	TIM_CHANNEL_4,
+	TIM_CHANNEL_1,
+	TIM_CHANNEL_2,
+	TIM_CHANNEL_3,
+	TIM_CHANNEL_4};
+	
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -112,10 +138,13 @@ static void MX_ADC1_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM8_Init(void);
 static void MX_USART3_UART_Init(void);
+static void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+void capture(void);
+void MEASUREMENT(int group);
+float get_temperature(int ch);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -152,9 +181,20 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM8_Init();
   MX_USART3_UART_Init();
+  MX_TIM2_Init();
 
   /* USER CODE BEGIN 2 */
-
+	htim[0] = &htim1;
+	htim[1] = &htim1;
+	htim[2] = &htim1;
+	htim[3] = &htim1;
+	htim[4] = &htim8;
+	htim[5] = &htim8;
+	htim[6] = &htim8;
+	htim[7] = &htim8;
+	
+	HAL_TIM_Base_Start_IT(&htim2);
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -164,8 +204,9 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-		HAL_UART_Transmit(&huart3,(uint8_t *)test,7,1000);
-		HAL_Delay(1000);
+		capture();
+		HAL_UART_Transmit(&huart3,(uint8_t *)data_buf,34,1000);
+		//HAL_UART_Transmit(&huart3,(uint8_t *)data_test,46,1000);
 
   }
   /* USER CODE END 3 */
@@ -189,7 +230,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL3;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -204,13 +245,13 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV4;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV2;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -306,6 +347,39 @@ static void MX_TIM1_Init(void)
   }
 
   if (HAL_TIM_IC_ConfigChannel(&htim1, &sConfigIC, TIM_CHANNEL_4) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* TIM2 init function */
+static void MX_TIM2_Init(void)
+{
+
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 23999;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 333;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -464,9 +538,119 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
-	char dma[10] = "dma!\r\n";
-	HAL_UART_Transmit(&huart3,(uint8_t *)dma,6,1000);
+	capture_cplt = 1;
 }
+
+void write_to_data_buf(int num,uint16_t Freq, uint16_t Temp)
+{
+	data_buf[num * 4 + 1] = (uint8_t)((Freq&0xff00)>>8);
+	data_buf[num * 4 + 2] = (uint8_t)(Freq&0x00ff);
+	data_buf[num * 4 + 3] = (uint8_t)((Temp&0xff00)>>8);
+	data_buf[num * 4 + 4] = (uint8_t)(Temp&0x00ff);
+}
+
+
+void write_to_data_test(int num,uint16_t Freq)
+{
+	data_test[num * 2] = (uint8_t)((Freq&0xff00)>>8);
+	data_test[num * 2 + 1] = (uint8_t)(Freq&0x00ff);
+}
+
+float get_temperature(int ch)
+{
+	int i;
+	float result = 0;
+	/*ADC_RegularChannelConfig(ADC1, adc_channel_map[ch], 1, ADC_SampleTime_239Cycles5);			    
+  for(i=0;i<8;i++)
+	{
+		ADC_SoftwareStartConvCmd(ADC1, ENABLE);
+		while(!ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC ));
+		result+=ADC_GetConversionValue(ADC1);
+	}
+	result=result/8;*/
+	return result;
+}
+
+void capture()
+{
+		int i, j;
+		float temp_log;
+	  
+	  for(i = 0;i < 2;i ++)
+		{
+			MEASUREMENT(i);
+		
+			for(j = 0;j < 4;j ++)
+			{
+				capture_cplt = 0;
+				capture_fini = 0;
+				
+				HAL_TIM_IC_Start_DMA(htim[i * 4 + j], TIM_CHANNEL[i * 4 + j], (uint32_t *)Capture[i * 4 + j], size);
+				
+				timeout_flag = 1;
+				while((capture_fini == 0) && (timeout_flag < 2)) ;
+				if(capture_fini == 0)
+				{
+					HAL_TIM_IC_Stop_DMA(htim[i * 4 + j], TIM_CHANNEL[i * 4 + j]);
+				}
+				
+				capture_cplt = 0;
+				capture_fini = 0;
+				timeout_flag = 0;
+			}
+		}
+
+		for(i = 0;i < 8; i ++)
+		{
+			Frequency=240000000.0f/cycleaverage[i] + 0.5f;
+			Temperature = get_temperature(i);	
+			temp_log = log(Temperature * 4.5185f);
+			Temperature = (1.0f / (A + B * temp_log + C * temp_log * temp_log * temp_log) - 273.2f) * 100.0f; 
+			write_to_data_buf(i,(uint16_t)(Frequency),(uint16_t)(Temperature));	
+		}
+		/*for(i = 0;i < 23; i ++)
+		{
+			Frequency=240000000.0f/cycle[i + 1] + 0.5f;
+			write_to_data_test(i,(uint16_t)(Frequency));
+		}*/
+}
+
+void MEASUREMENT(int group)
+{
+	unsigned int i,j;
+	
+	i = 1500;	
+  while(i>=900)
+	{
+		j = i;
+		HAL_GPIO_WritePin(STRING_GPIO[group * 4], STRING_PIN[group * 4], GPIO_PIN_SET);		
+		HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 1], STRING_PIN[group * 4 + 1], GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 2], STRING_PIN[group * 4 + 2], GPIO_PIN_SET);
+		HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 3], STRING_PIN[group * 4 + 3], GPIO_PIN_RESET);
+		while(j)
+		{    
+				__nop();__nop();__nop();__nop();__nop();__nop();__nop();__nop();__nop();__nop();
+				j = j - 1;
+		}  
+		
+		j = i;
+		HAL_GPIO_WritePin(STRING_GPIO[group * 4], STRING_PIN[group * 4], GPIO_PIN_RESET);	
+		HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 1], STRING_PIN[group * 4 + 1], GPIO_PIN_SET);
+		HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 2], STRING_PIN[group * 4 + 2], GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 3], STRING_PIN[group * 4 + 3], GPIO_PIN_SET);		
+		while(j)
+		{  
+			 __nop();__nop();__nop();__nop();__nop();__nop();__nop();__nop();__nop();__nop();
+			 j = j - 1;
+		}    
+		i = i - 1; 
+	}
+	
+	HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 1], STRING_PIN[group * 4 + 1], GPIO_PIN_RESET);	
+	HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 3], STRING_PIN[group * 4 + 3], GPIO_PIN_RESET);
+	
+	HAL_Delay(200);                                                                                                                                                                                                                       
+}                                                                                                                                                                                                                  
 /* USER CODE END 4 */
 
 /**

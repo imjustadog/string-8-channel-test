@@ -36,6 +36,20 @@
 #include "stm32f1xx_it.h"
 
 /* USER CODE BEGIN 0 */
+extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim8;
+extern volatile uint8_t capture_cplt;
+extern volatile uint8_t capture_fini;
+extern volatile uint8_t timeout_flag;
+extern volatile uint8_t send_flag;
+extern volatile uint8_t capture_flag;
+extern float cycleaverage[8];
+extern uint16_t Capture[8][30];
+extern uint32_t size;
+
+uint16_t cycle[30] = {0};
+uint32_t allcycle = 0;
+
 
 /* USER CODE END 0 */
 
@@ -48,6 +62,7 @@ extern DMA_HandleTypeDef hdma_tim8_ch1;
 extern DMA_HandleTypeDef hdma_tim8_ch2;
 extern DMA_HandleTypeDef hdma_tim8_ch3_up;
 extern DMA_HandleTypeDef hdma_tim8_ch4_trig_com;
+extern TIM_HandleTypeDef htim2;
 
 /******************************************************************************/
 /*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
@@ -197,11 +212,30 @@ void SysTick_Handler(void)
 void DMA1_Channel2_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Channel2_IRQn 0 */
-
+	int i;
+	int channel = 0;
   /* USER CODE END DMA1_Channel2_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_tim1_ch1);
   /* USER CODE BEGIN DMA1_Channel2_IRQn 1 */
-
+	if(capture_cplt == 1)
+	{
+		allcycle = 0;
+		for(i = 1;i < size - 1;i ++)
+		{
+			if (Capture[channel][i + 1] > Capture[channel][i])
+			{
+				cycle[i] = Capture[channel][i + 1] - Capture[channel][i]; 
+			}
+			else
+			{
+				cycle[i]= (0xFFFF - Capture[channel][i]) + Capture[channel][i + 1]; 
+			}
+			/* Frequency computation */ 
+			allcycle += cycle[i];
+		}
+		cycleaverage[channel] = allcycle  /(float)(size - 2);
+		capture_fini = 1;
+	}
   /* USER CODE END DMA1_Channel2_IRQn 1 */
 }
 
@@ -211,11 +245,30 @@ void DMA1_Channel2_IRQHandler(void)
 void DMA1_Channel3_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Channel3_IRQn 0 */
-
+	int i;
+	int channel = 1;
   /* USER CODE END DMA1_Channel3_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_tim1_ch2);
   /* USER CODE BEGIN DMA1_Channel3_IRQn 1 */
-
+	if(capture_cplt == 1)
+	{
+		allcycle = 0;
+		for(i = 1;i < size - 1;i ++)
+		{
+			if (Capture[channel][i + 1] > Capture[channel][i])
+			{
+				cycle[i] = Capture[channel][i + 1] - Capture[channel][i]; 
+			}
+			else
+			{
+				cycle[i]= (0xFFFF - Capture[channel][i]) + Capture[channel][i + 1]; 
+			}
+			/* Frequency computation */ 
+			allcycle += cycle[i];
+		}
+		cycleaverage[channel] = allcycle  /(float)(size - 2);
+		capture_fini = 1;
+	}
   /* USER CODE END DMA1_Channel3_IRQn 1 */
 }
 
@@ -225,11 +278,30 @@ void DMA1_Channel3_IRQHandler(void)
 void DMA1_Channel4_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Channel4_IRQn 0 */
-
+	int i;
+	int channel = 3;
   /* USER CODE END DMA1_Channel4_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_tim1_ch4_trig_com);
   /* USER CODE BEGIN DMA1_Channel4_IRQn 1 */
-
+	if(capture_cplt == 1)
+	{
+		allcycle = 0;
+		for(i = 1;i < size - 1;i ++)
+		{
+			if (Capture[channel][i + 1] > Capture[channel][i])
+			{
+				cycle[i] = Capture[channel][i + 1] - Capture[channel][i]; 
+			}
+			else
+			{
+				cycle[i]= (0xFFFF - Capture[channel][i]) + Capture[channel][i + 1]; 
+			}
+			/* Frequency computation */ 
+			allcycle += cycle[i];
+		}
+		cycleaverage[channel] = allcycle  /(float)(size - 2);
+		capture_fini = 1;
+	}
   /* USER CODE END DMA1_Channel4_IRQn 1 */
 }
 
@@ -239,12 +311,48 @@ void DMA1_Channel4_IRQHandler(void)
 void DMA1_Channel6_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Channel6_IRQn 0 */
-
+	int i;
+	int channel = 2;
   /* USER CODE END DMA1_Channel6_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_tim1_ch3);
   /* USER CODE BEGIN DMA1_Channel6_IRQn 1 */
-
+	if(capture_cplt == 1)
+	{
+		allcycle = 0;
+		for(i = 1;i < size - 1;i ++)
+		{
+			if (Capture[channel][i + 1] > Capture[channel][i])
+			{
+				cycle[i] = Capture[channel][i + 1] - Capture[channel][i]; 
+			}
+			else
+			{
+				cycle[i]= (0xFFFF - Capture[channel][i]) + Capture[channel][i + 1]; 
+			}
+			/* Frequency computation */ 
+			allcycle += cycle[i];
+		}
+		cycleaverage[channel] = allcycle  /(float)(size - 2);
+		capture_fini = 1;
+	}
   /* USER CODE END DMA1_Channel6_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM2 global interrupt.
+*/
+void TIM2_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM2_IRQn 0 */
+
+  /* USER CODE END TIM2_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim2);
+  /* USER CODE BEGIN TIM2_IRQn 1 */
+  if(timeout_flag != 0)
+	{
+			timeout_flag ++;
+	}
+  /* USER CODE END TIM2_IRQn 1 */
 }
 
 /**
@@ -253,11 +361,30 @@ void DMA1_Channel6_IRQHandler(void)
 void DMA2_Channel1_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA2_Channel1_IRQn 0 */
-
+	int i;
+	int channel = 6;
   /* USER CODE END DMA2_Channel1_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_tim8_ch3_up);
   /* USER CODE BEGIN DMA2_Channel1_IRQn 1 */
-
+	if(capture_cplt == 1)
+	{
+		allcycle = 0;
+		for(i = 1;i < size - 1;i ++)
+		{
+			if (Capture[channel][i + 1] > Capture[channel][i])
+			{
+				cycle[i] = Capture[channel][i + 1] - Capture[channel][i]; 
+			}
+			else
+			{
+				cycle[i]= (0xFFFF - Capture[channel][i]) + Capture[channel][i + 1]; 
+			}
+			/* Frequency computation */ 
+			allcycle += cycle[i];
+		}
+		cycleaverage[channel] = allcycle  /(float)(size - 2);
+		capture_fini = 1;
+	}
   /* USER CODE END DMA2_Channel1_IRQn 1 */
 }
 
@@ -267,11 +394,30 @@ void DMA2_Channel1_IRQHandler(void)
 void DMA2_Channel2_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA2_Channel2_IRQn 0 */
-
+	int i;
+	int channel = 7;
   /* USER CODE END DMA2_Channel2_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_tim8_ch4_trig_com);
   /* USER CODE BEGIN DMA2_Channel2_IRQn 1 */
-
+	if(capture_cplt == 1)
+	{
+		allcycle = 0;
+		for(i = 1;i < size - 1;i ++)
+		{
+			if (Capture[channel][i + 1] > Capture[channel][i])
+			{
+				cycle[i] = Capture[channel][i + 1] - Capture[channel][i]; 
+			}
+			else
+			{
+				cycle[i]= (0xFFFF - Capture[channel][i]) + Capture[channel][i + 1]; 
+			}
+			/* Frequency computation */ 
+			allcycle += cycle[i];
+		}
+		cycleaverage[channel] = allcycle  /(float)(size - 2);
+		capture_fini = 1;
+	}
   /* USER CODE END DMA2_Channel2_IRQn 1 */
 }
 
@@ -281,11 +427,30 @@ void DMA2_Channel2_IRQHandler(void)
 void DMA2_Channel3_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA2_Channel3_IRQn 0 */
-
+	int i;
+	int channel = 4;
   /* USER CODE END DMA2_Channel3_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_tim8_ch1);
   /* USER CODE BEGIN DMA2_Channel3_IRQn 1 */
-
+	if(capture_cplt == 1)
+	{
+		allcycle = 0;
+		for(i = 1;i < size - 1;i ++)
+		{
+			if (Capture[channel][i + 1] > Capture[channel][i])
+			{
+				cycle[i] = Capture[channel][i + 1] - Capture[channel][i]; 
+			}
+			else
+			{
+				cycle[i]= (0xFFFF - Capture[channel][i]) + Capture[channel][i + 1]; 
+			}
+			/* Frequency computation */ 
+			allcycle += cycle[i];
+		}
+		cycleaverage[channel] = allcycle  /(float)(size - 2);
+		capture_fini = 1;
+	}
   /* USER CODE END DMA2_Channel3_IRQn 1 */
 }
 
@@ -295,11 +460,30 @@ void DMA2_Channel3_IRQHandler(void)
 void DMA2_Channel4_5_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA2_Channel4_5_IRQn 0 */
-
+	int i;
+	int channel = 5;
   /* USER CODE END DMA2_Channel4_5_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_tim8_ch2);
   /* USER CODE BEGIN DMA2_Channel4_5_IRQn 1 */
-
+	if(capture_cplt == 1)
+	{
+		allcycle = 0;
+		for(i = 1;i < size - 1;i ++)
+		{
+			if (Capture[channel][i + 1] > Capture[channel][i])
+			{
+				cycle[i] = Capture[channel][i + 1] - Capture[channel][i]; 
+			}
+			else
+			{
+				cycle[i]= (0xFFFF - Capture[channel][i]) + Capture[channel][i + 1]; 
+			}
+			/* Frequency computation */ 
+			allcycle += cycle[i];
+		}
+		cycleaverage[channel] = allcycle  /(float)(size - 2);
+		capture_fini = 1;
+	}
   /* USER CODE END DMA2_Channel4_5_IRQn 1 */
 }
 

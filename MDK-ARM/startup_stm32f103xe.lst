@@ -580,9 +580,17 @@ ARM Macro Assembler    Page 9
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
 ork --depend=string-8-channel-test\startup_stm32f103xe.d -ostring-8-channel-tes
-t\startup_stm32f103xe.o -IC:\Keil_v5\ARM\RV31\INC -IC:\Keil_v5\ARM\CMSIS\Includ
-e --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VERSION SETA 524" --li
-st=startup_stm32f103xe.lst startup_stm32f103xe.s
+t\startup_stm32f103xe.o -I.\RTE\_string-8-channel-test -IC:\Keil_v5\ARM\PACK\AR
+M\CMSIS\5.0.1\CMSIS\Include -IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Devi
+ce\Include --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VERSION SETA 
+
+
+
+ARM Macro Assembler    Page 10 
+
+
+524" --predefine="_RTE_ SETA 1" --predefine="STM32F10X_HD SETA 1" --list=startu
+p_stm32f103xe.lst startup_stm32f103xe.s
 
 
 
@@ -1454,4 +1462,4 @@ Symbol: __main
       At line 168 in file startup_stm32f103xe.s
 Comment: __main used once
 2 symbols
-421 symbols in table
+423 symbols in table
