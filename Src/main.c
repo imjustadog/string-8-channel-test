@@ -44,7 +44,7 @@
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc3;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
@@ -81,6 +81,7 @@ float Temperature = 0;
 TIM_HandleTypeDef *htim[8];
 DMA_HandleTypeDef *hdma[8];
 
+float adcbuf[8] = {0};
 float	A = 0.0014051f;
 float B = 0.0002369f;
 float C = 0.0000001019f;
@@ -88,6 +89,8 @@ float C = 0.0000001019f;
 uint8_t data_buf[34] = {
 	'S',
 	0,0,0,0,
+	0,0,0,0, 
+	0,0,0,0, 
 	0,0,0,0, 
 	0,0,0,0, 
 	0,0,0,0, 
@@ -134,17 +137,17 @@ uint32_t TIM_CHANNEL[8] = {
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
-static void MX_ADC1_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM8_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_ADC3_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 void capture(void);
 void MEASUREMENT(int group);
-float get_temperature(int ch);
+void get_temperature(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -177,11 +180,11 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_ADC1_Init();
   MX_TIM1_Init();
   MX_TIM8_Init();
   MX_USART3_UART_Init();
   MX_TIM2_Init();
+  MX_ADC3_Init();
 
   /* USER CODE BEGIN 2 */
 	htim[0] = &htim1;
@@ -269,22 +272,60 @@ void SystemClock_Config(void)
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
-/* ADC1 init function */
-static void MX_ADC1_Init(void)
+/* ADC3 init function */
+static void MX_ADC3_Init(void)
 {
 
   ADC_ChannelConfTypeDef sConfig;
 
     /**Common config 
     */
-  hadc1.Instance = ADC1;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  hadc3.Instance = ADC3;
+  hadc3.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc3.Init.ContinuousConvMode = DISABLE;
+  hadc3.Init.DiscontinuousConvMode = ENABLE;
+  hadc3.Init.NbrOfDiscConversion = 1;
+  hadc3.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc3.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc3.Init.NbrOfConversion = 8;
+  if (HAL_ADC_Init(&hadc3) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_0;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = 2;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Rank = 3;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = 4;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -292,9 +333,35 @@ static void MX_ADC1_Init(void)
     /**Configure Regular Channel 
     */
   sConfig.Channel = ADC_CHANNEL_10;
-  sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  sConfig.Rank = 5;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_11;
+  sConfig.Rank = 6;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_12;
+  sConfig.Rank = 7;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_13;
+  sConfig.Rank = 8;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -500,6 +567,10 @@ static void MX_DMA_Init(void)
         * Output
         * EVENT_OUT
         * EXTI
+     PA0-WKUP   ------> ADCx_IN0
+     PA1   ------> ADCx_IN1
+     PA2   ------> ADCx_IN2
+     PA3   ------> ADCx_IN3
 */
 static void MX_GPIO_Init(void)
 {
@@ -518,6 +589,11 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_6|GPIO_PIN_7 
                           |GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : PA0 PA1 PA2 PA3 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PA6 PA7 */
   GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
@@ -556,19 +632,16 @@ void write_to_data_test(int num,uint16_t Freq)
 	data_test[num * 2 + 1] = (uint8_t)(Freq&0x00ff);
 }
 
-float get_temperature(int ch)
+void get_temperature()
 {
 	int i;
-	float result = 0;
-	/*ADC_RegularChannelConfig(ADC1, adc_channel_map[ch], 1, ADC_SampleTime_239Cycles5);			    
-  for(i=0;i<8;i++)
+	for(i = 0;i < 8;i ++)
 	{
-		ADC_SoftwareStartConvCmd(ADC1, ENABLE);
-		while(!ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC ));
-		result+=ADC_GetConversionValue(ADC1);
+		HAL_ADC_Start(&hadc3);
+		HAL_ADC_PollForConversion(&hadc3,1000);
+		adcbuf[i]=HAL_ADC_GetValue(&hadc3);
 	}
-	result=result/8;*/
-	return result;
+	HAL_ADC_Stop(&hadc3);
 }
 
 void capture()
@@ -599,11 +672,12 @@ void capture()
 				timeout_flag = 0;
 			}
 		}
-
+		get_temperature();	
+		
 		for(i = 0;i < 8; i ++)
 		{
 			Frequency=240000000.0f/cycleaverage[i] + 0.5f;
-			Temperature = get_temperature(i);	
+			Temperature = adcbuf[i];
 			temp_log = log(Temperature * 4.5185f);
 			Temperature = (1.0f / (A + B * temp_log + C * temp_log * temp_log * temp_log) - 273.2f) * 100.0f; 
 			write_to_data_buf(i,(uint16_t)(Frequency),(uint16_t)(Temperature));	
