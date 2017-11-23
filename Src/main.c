@@ -305,6 +305,62 @@ static void MX_ADC3_Init(void)
 
     /**Configure Regular Channel 
     */
+  sConfig.Rank = 2;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Rank = 3;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Rank = 4;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Rank = 5;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Rank = 6;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Rank = 7;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Rank = 8;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = 2;
   if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
@@ -430,7 +486,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 23999;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 333;
+  htim2.Init.Period = 49;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -649,28 +705,27 @@ void capture()
 		int i, j;
 		float temp_log;
 	  
-	  for(i = 0;i < 2;i ++)
+	  for(i = 0;i < 8;i ++)
 		{
 			MEASUREMENT(i);
 		
-			for(j = 0;j < 4;j ++)
-			{
+			
 				capture_cplt = 0;
 				capture_fini = 0;
 				
-				HAL_TIM_IC_Start_DMA(htim[i * 4 + j], TIM_CHANNEL[i * 4 + j], (uint32_t *)Capture[i * 4 + j], size);
+				HAL_TIM_IC_Start_DMA(htim[i], TIM_CHANNEL[i], (uint32_t *)Capture[i], size);
 				
 				timeout_flag = 1;
-				while((capture_fini == 0) && (timeout_flag < 2)) ;
+				while((capture_fini == 0) && (timeout_flag < 3)) ;
 				if(capture_fini == 0)
 				{
-					HAL_TIM_IC_Stop_DMA(htim[i * 4 + j], TIM_CHANNEL[i * 4 + j]);
+					HAL_TIM_IC_Stop_DMA(htim[i], TIM_CHANNEL[i]);
 				}
 				
 				capture_cplt = 0;
 				capture_fini = 0;
 				timeout_flag = 0;
-			}
+			
 		}
 		get_temperature();	
 		
@@ -693,14 +748,11 @@ void MEASUREMENT(int group)
 {
 	unsigned int i,j;
 	
-	i = 1500;	
-  while(i>=900)
+	i = 1200;	
+  while(i>=1000)
 	{
 		j = i;
-		HAL_GPIO_WritePin(STRING_GPIO[group * 4], STRING_PIN[group * 4], GPIO_PIN_SET);		
-		HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 1], STRING_PIN[group * 4 + 1], GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 2], STRING_PIN[group * 4 + 2], GPIO_PIN_SET);
-		HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 3], STRING_PIN[group * 4 + 3], GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(STRING_GPIO[group], STRING_PIN[group], GPIO_PIN_SET);		
 		while(j)
 		{    
 				__nop();__nop();__nop();__nop();__nop();__nop();__nop();__nop();__nop();__nop();
@@ -708,10 +760,7 @@ void MEASUREMENT(int group)
 		}  
 		
 		j = i;
-		HAL_GPIO_WritePin(STRING_GPIO[group * 4], STRING_PIN[group * 4], GPIO_PIN_RESET);	
-		HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 1], STRING_PIN[group * 4 + 1], GPIO_PIN_SET);
-		HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 2], STRING_PIN[group * 4 + 2], GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 3], STRING_PIN[group * 4 + 3], GPIO_PIN_SET);		
+		HAL_GPIO_WritePin(STRING_GPIO[group], STRING_PIN[group], GPIO_PIN_RESET);	
 		while(j)
 		{  
 			 __nop();__nop();__nop();__nop();__nop();__nop();__nop();__nop();__nop();__nop();
@@ -720,10 +769,7 @@ void MEASUREMENT(int group)
 		i = i - 1; 
 	}
 	
-	HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 1], STRING_PIN[group * 4 + 1], GPIO_PIN_RESET);	
-	HAL_GPIO_WritePin(STRING_GPIO[group * 4 + 3], STRING_PIN[group * 4 + 3], GPIO_PIN_RESET);
-	
-	HAL_Delay(200);                                                                                                                                                                                                                       
+	HAL_Delay(250);                                                                                                                                                                                                                       
 }                                                                                                                                                                                                                  
 /* USER CODE END 4 */
 

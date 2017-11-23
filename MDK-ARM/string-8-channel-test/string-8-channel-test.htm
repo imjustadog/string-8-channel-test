@@ -3,7 +3,7 @@
 <title>Static Call Graph - [string-8-channel-test\string-8-channel-test.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image string-8-channel-test\string-8-channel-test.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Wed Nov 22 21:06:55 2017
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Thu Nov 23 15:01:51 2017
 <BR><P>
 <H3>Maximum Stack Usage =        248 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -1008,8 +1008,8 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f103xe.o(RESET)
 </UL>
-<P><STRONG><a name="[9c]"></a>MEASUREMENT</STRONG> (Thumb, 208 bytes, Stack size 32 bytes, main.o(i.MEASUREMENT))
-<BR><BR>[Stack]<UL><LI>Max Depth = 48<LI>Call Chain = MEASUREMENT &rArr; HAL_Delay
+<P><STRONG><a name="[9c]"></a>MEASUREMENT</STRONG> (Thumb, 122 bytes, Stack size 24 bytes, main.o(i.MEASUREMENT))
+<BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = MEASUREMENT &rArr; HAL_Delay
 </UL>
 <BR>[Calls]<UL><LI><a href="#[6d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 <LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_WritePin
@@ -1156,7 +1156,7 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[b5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;log
 </UL>
 
-<P><STRONG><a name="[b1]"></a>capture</STRONG> (Thumb, 300 bytes, Stack size 40 bytes, main.o(i.capture))
+<P><STRONG><a name="[b1]"></a>capture</STRONG> (Thumb, 274 bytes, Stack size 40 bytes, main.o(i.capture))
 <BR><BR>[Stack]<UL><LI>Max Depth = 248<LI>Call Chain = capture &rArr; log &rArr; __kernel_poly &rArr; __aeabi_dmul &rArr; _double_epilogue &rArr; _double_round
 </UL>
 <BR>[Calls]<UL><LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_IC_Stop_DMA
@@ -1291,8 +1291,8 @@ Local Symbols
 <BR>[Called By]<UL><LI><a href="#[9a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_Transmit
 </UL>
 
-<P><STRONG><a name="[9e]"></a>MX_ADC3_Init</STRONG> (Thumb, 196 bytes, Stack size 32 bytes, main.o(i.MX_ADC3_Init))
-<BR><BR>[Stack]<UL><LI>Max Depth = 128<LI>Call Chain = MX_ADC3_Init &rArr; HAL_ADC_Init &rArr; HAL_ADC_MspInit &rArr; HAL_GPIO_Init
+<P><STRONG><a name="[9e]"></a>MX_ADC3_Init</STRONG> (Thumb, 314 bytes, Stack size 48 bytes, main.o(i.MX_ADC3_Init))
+<BR><BR>[Stack]<UL><LI>Max Depth = 144<LI>Call Chain = MX_ADC3_Init &rArr; HAL_ADC_Init &rArr; HAL_ADC_MspInit &rArr; HAL_GPIO_Init
 </UL>
 <BR>[Calls]<UL><LI><a href="#[64]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_ADC_Init
 <LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_ADC_ConfigChannel
@@ -1328,7 +1328,7 @@ Local Symbols
 <BR>[Called By]<UL><LI><a href="#[46]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[a4]"></a>MX_TIM2_Init</STRONG> (Thumb, 80 bytes, Stack size 32 bytes, main.o(i.MX_TIM2_Init))
+<P><STRONG><a name="[a4]"></a>MX_TIM2_Init</STRONG> (Thumb, 78 bytes, Stack size 32 bytes, main.o(i.MX_TIM2_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 64<LI>Call Chain = MX_TIM2_Init &rArr; HAL_TIM_Base_Init &rArr; HAL_TIM_Base_MspInit &rArr; HAL_NVIC_SetPriority
 </UL>
 <BR>[Calls]<UL><LI><a href="#[80]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_ConfigClockSource
